@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion, useInView, useSpring, useTransform } from "framer-motion";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 interface CounterAnimationProps {
   value: number;
@@ -13,33 +12,64 @@ interface CounterAnimationProps {
 
 export default function CounterAnimation({
   value,
-  duration = 2,
+  duration = 2000,
   prefix = "",
   suffix = "",
   className = "",
 }: CounterAnimationProps) {
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const [displayValue, setDisplayValue] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
 
-  const spring = useSpring(0, { duration: duration * 1000 });
-  const display = useTransform(spring, (current) => Math.round(current));
+  const animate = useCallback(() => {
+    const startTime = performance.now();
+    const startValue = 0;
+    const endValue = value;
+
+    const step = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Easing function (ease-out)
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+
+      const current = Math.round(startValue + (endValue - startValue) * easeOut);
+      setDisplayValue(current);
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    };
+
+    requestAnimationFrame(step);
+  }, [value, duration]);
 
   useEffect(() => {
-    if (isInView && !hasAnimated) {
-      spring.set(value);
-      setHasAnimated(true);
+    if (hasAnimated) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasAnimated) {
+            setHasAnimated(true);
+            animate();
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "-50px" }
+    );
+
+    const currentRef = ref.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
-  }, [isInView, value, spring, hasAnimated]);
 
-  const [displayValue, setDisplayValue] = useState(0);
-
-  useEffect(() => {
-    const unsubscribe = display.on("change", (latest) => {
-      setDisplayValue(latest);
-    });
-    return unsubscribe;
-  }, [display]);
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [animate, hasAnimated]);
 
   return (
     <span ref={ref} className={className}>
