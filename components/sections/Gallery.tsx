@@ -1,8 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useInView } from "framer-motion";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 
@@ -38,42 +36,117 @@ const galleryImages = [
 ];
 
 export default function Gallery() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
-  const handlePrevious = () => {
-    if (selectedImage !== null) {
-      const currentIndex = galleryImages.findIndex(
-        (img) => img.id === selectedImage
-      );
-      const previousIndex =
-        (currentIndex - 1 + galleryImages.length) % galleryImages.length;
-      setSelectedImage(galleryImages[previousIndex].id);
+  // Minimum swipe distance
+  const minSwipeDistance = 50;
+
+  // Intersection observer for section visibility
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const handlePrevious = useCallback(() => {
+    if (currentIndex !== null) {
+      setCurrentIndex((currentIndex - 1 + galleryImages.length) % galleryImages.length);
+    }
+  }, [currentIndex]);
+
+  const handleNext = useCallback(() => {
+    if (currentIndex !== null) {
+      setCurrentIndex((currentIndex + 1) % galleryImages.length);
+    }
+  }, [currentIndex]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (currentIndex === null) return;
+
+      if (e.key === "ArrowLeft") {
+        handlePrevious();
+      } else if (e.key === "ArrowRight") {
+        handleNext();
+      } else if (e.key === "Escape") {
+        setCurrentIndex(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentIndex, handlePrevious, handleNext]);
+
+  // Prevent body scroll when lightbox is open
+  useEffect(() => {
+    if (currentIndex !== null) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [currentIndex]);
+
+  // Touch handlers for swipe
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      handleNext();
+    } else if (isRightSwipe) {
+      handlePrevious();
     }
   };
 
-  const handleNext = () => {
-    if (selectedImage !== null) {
-      const currentIndex = galleryImages.findIndex(
-        (img) => img.id === selectedImage
-      );
-      const nextIndex = (currentIndex + 1) % galleryImages.length;
-      setSelectedImage(galleryImages[nextIndex].id);
-    }
+  const openLightbox = (index: number) => {
+    setCurrentIndex(index);
   };
 
-  const selectedImageData = galleryImages.find((img) => img.id === selectedImage);
+  const closeLightbox = () => {
+    setCurrentIndex(null);
+  };
+
+  const currentImage = currentIndex !== null ? galleryImages[currentIndex] : null;
 
   return (
     <section id="galeria" className="py-24 md:py-32 bg-secondary/30">
       <div className="container mx-auto px-4">
-        <motion.div
+        <div
           ref={ref}
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-12"
+          className={`text-center mb-12 transition-all duration-700 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          }`}
         >
           <span className="text-gold text-sm font-semibold tracking-widest uppercase mb-4 block">
             Momentos
@@ -84,18 +157,18 @@ export default function Gallery() {
           <p className="text-foreground/60 max-w-2xl mx-auto">
             Capturas de los mejores momentos dentro y fuera de la cancha
           </p>
-        </motion.div>
+        </div>
 
         {/* Masonry Grid */}
         <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
           {galleryImages.map((image, index) => (
-            <motion.div
+            <div
               key={image.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={isInView ? { opacity: 1, scale: 1 } : {}}
-              transition={{ duration: 0.5, delay: index * 0.03 }}
-              className="break-inside-avoid cursor-pointer group relative overflow-hidden rounded-xl"
-              onClick={() => setSelectedImage(image.id)}
+              className={`break-inside-avoid cursor-pointer group relative overflow-hidden rounded-xl transition-all duration-500 ${
+                isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+              }`}
+              style={{ transitionDelay: `${index * 30}ms` }}
+              onClick={() => openLightbox(index)}
             >
               <div
                 className={`relative w-full ${
@@ -117,66 +190,88 @@ export default function Gallery() {
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <span className="text-white text-sm font-medium">Ver</span>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Lightbox */}
-        {selectedImage !== null && selectedImageData && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
-            onClick={() => setSelectedImage(null)}
+        {currentIndex !== null && currentImage && (
+          <div
+            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+            onClick={closeLightbox}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
           >
             {/* Close button */}
             <button
-              className="absolute top-4 right-4 text-white/70 hover:text-white p-2 z-10"
-              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 text-white/70 hover:text-white p-2 z-20 bg-black/50 rounded-full"
+              onClick={closeLightbox}
+              aria-label="Cerrar"
             >
-              <X className="w-8 h-8" />
+              <X className="w-6 h-6" />
             </button>
 
-            {/* Navigation */}
+            {/* Counter */}
+            <div className="absolute top-4 left-4 text-white/70 text-sm z-20 bg-black/50 px-3 py-1 rounded-full">
+              {currentIndex + 1} / {galleryImages.length}
+            </div>
+
+            {/* Navigation - Previous */}
             <button
-              className="absolute left-4 text-white/70 hover:text-white p-2 z-10"
+              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-2 z-20 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 handlePrevious();
               }}
+              aria-label="Anterior"
             >
-              <ChevronLeft className="w-10 h-10" />
+              <ChevronLeft className="w-8 h-8" />
             </button>
+
+            {/* Navigation - Next */}
             <button
-              className="absolute right-4 text-white/70 hover:text-white p-2 z-10"
+              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-2 z-20 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 handleNext();
               }}
+              aria-label="Siguiente"
             >
-              <ChevronRight className="w-10 h-10" />
+              <ChevronRight className="w-8 h-8" />
             </button>
 
             {/* Image container */}
             <div
-              className={`relative ${
-                selectedImageData.orientation === "vertical"
-                  ? "h-[80vh] w-auto aspect-[3/4]"
-                  : "w-full max-w-4xl aspect-[4/3]"
-              }`}
+              className="relative w-full h-full flex items-center justify-center p-4 md:p-16"
               onClick={(e) => e.stopPropagation()}
             >
-              <Image
-                src={selectedImageData.src}
-                alt={selectedImageData.alt}
-                fill
-                className="object-contain rounded-xl"
-                sizes="100vw"
-                priority
-              />
+              <div
+                className={`relative ${
+                  currentImage.orientation === "vertical"
+                    ? "h-[85vh] max-h-[85vh] w-auto max-w-[90vw]"
+                    : "w-[90vw] max-w-4xl h-auto"
+                }`}
+                style={{
+                  aspectRatio: currentImage.orientation === "vertical" ? "3/4" : "4/3"
+                }}
+              >
+                <Image
+                  src={currentImage.src}
+                  alt={currentImage.alt}
+                  fill
+                  className="object-contain"
+                  sizes="100vw"
+                  priority
+                />
+              </div>
             </div>
-          </motion.div>
+
+            {/* Swipe hint for mobile */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-xs md:hidden">
+              Desliza para navegar
+            </div>
+          </div>
         )}
       </div>
     </section>
