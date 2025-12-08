@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Menu, Instagram, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import Image from "next/image";
 
 const navItems = [
   { href: "#sobre-mi", label: "Sobre Mí" },
@@ -58,13 +59,18 @@ export default function Navbar() {
           <a href="#inicio" className="group flex items-center gap-3">
             <div className="relative">
               <div
-                className={`rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center transition-all duration-300 group-hover:scale-105 ${
-                  isScrolled ? "w-9 h-9" : "w-10 h-10"
+                className={`relative transition-all duration-300 group-hover:scale-105 ${
+                  isScrolled ? "w-9 h-9" : "w-11 h-11"
                 }`}
               >
-                <span className="text-black font-bold text-lg">JB</span>
+                <Image
+                  src="/logo-juanchi.png"
+                  alt="Juan Balzola Logo"
+                  fill
+                  className="object-contain"
+                />
               </div>
-              <div className="absolute inset-0 rounded-xl bg-gold/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gold/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <div className={`hidden sm:block transition-all duration-300 overflow-hidden ${isScrolled ? "opacity-0 w-0" : "opacity-100 w-auto"}`}>
               <p className="text-sm font-semibold text-foreground leading-none whitespace-nowrap">Juan Balzola</p>
@@ -160,8 +166,13 @@ export default function Navbar() {
                 {/* Mobile header */}
                 <div className="p-6 border-b border-white/10">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center shadow-lg shadow-gold/20">
-                      <span className="text-black font-bold text-2xl">JB</span>
+                    <div className="relative w-14 h-14">
+                      <Image
+                        src="/logo-juanchi.png"
+                        alt="Juan Balzola Logo"
+                        fill
+                        className="object-contain"
+                      />
                     </div>
                     <div>
                       <p className="font-bold text-lg text-foreground">Juan Balzola</p>

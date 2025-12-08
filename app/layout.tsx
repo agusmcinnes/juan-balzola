@@ -17,10 +17,15 @@ export const metadata: Metadata = {
   description: "Jugador profesional de padel argentino. Ranking FIP #294. Experiencia internacional en Madrid y torneos Premier Padel.",
   keywords: ["padel", "jugador profesional", "FIP", "Premier Padel", "Juan Balzola", "Argentina", "Mar del Plata"],
   authors: [{ name: "Juan Balzola" }],
+  icons: {
+    icon: "/logo-juanchi.png",
+    apple: "/logo-juanchi.png",
+  },
   openGraph: {
     title: "Juan Balzola | Jugador Profesional de Padel",
     description: "Jugador profesional de padel argentino. Ranking FIP #294.",
     type: "website",
+    images: ["/logo-juanchi.png"],
   },
 };
 
