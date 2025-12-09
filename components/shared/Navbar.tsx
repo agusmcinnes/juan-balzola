@@ -194,7 +194,14 @@ export default function Navbar() {
                         <motion.a
                           key={item.href}
                           href={item.href}
-                          onClick={() => setIsOpen(false)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setIsOpen(false);
+                            setTimeout(() => {
+                              const element = document.querySelector(item.href);
+                              element?.scrollIntoView({ behavior: "smooth" });
+                            }, 300);
+                          }}
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.03 }}
@@ -226,7 +233,14 @@ export default function Navbar() {
                   </a>
                   <a
                     href="#contacto"
-                    onClick={() => setIsOpen(false)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsOpen(false);
+                      setTimeout(() => {
+                        const element = document.querySelector("#contacto");
+                        element?.scrollIntoView({ behavior: "smooth" });
+                      }, 300);
+                    }}
                     className="flex items-center justify-center py-3.5 rounded-xl bg-gold text-black font-semibold"
                   >
                     Contacto
