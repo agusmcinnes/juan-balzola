@@ -4,7 +4,15 @@ import { motion } from "framer-motion";
 import { ChevronDown, Trophy, MapPin, ArrowRight, Instagram } from "lucide-react";
 import CounterAnimation from "@/components/shared/CounterAnimation";
 
-export default function Hero() {
+export default function Hero({
+  fipRanking = 294,
+  bestRanking = 222,
+  points2025 = 119,
+}: {
+  fipRanking?: number;
+  bestRanking?: number;
+  points2025?: number;
+}) {
   return (
     <section
       id="inicio"
@@ -84,7 +92,7 @@ export default function Hero() {
             <div className="flex items-center justify-center gap-2 text-gold mb-1">
               <Trophy className="w-5 h-5" />
               <span className="text-3xl md:text-4xl font-bold">
-                #<CounterAnimation value={294} />
+                #<CounterAnimation value={fipRanking} />
               </span>
             </div>
             <p className="text-sm text-foreground/50 uppercase tracking-wider">
@@ -94,7 +102,7 @@ export default function Hero() {
           <div className="w-px h-12 bg-border hidden md:block" />
           <div className="text-center">
             <span className="text-3xl md:text-4xl font-bold text-foreground">
-              #<CounterAnimation value={222} />
+              #<CounterAnimation value={bestRanking} />
             </span>
             <p className="text-sm text-foreground/50 uppercase tracking-wider">
               Mejor Ranking
@@ -103,7 +111,7 @@ export default function Hero() {
           <div className="w-px h-12 bg-border hidden md:block" />
           <div className="text-center">
             <span className="text-3xl md:text-4xl font-bold text-foreground">
-              <CounterAnimation value={119} />
+              <CounterAnimation value={points2025} />
             </span>
             <p className="text-sm text-foreground/50 uppercase tracking-wider">
               Puntos 2025
