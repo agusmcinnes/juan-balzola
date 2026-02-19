@@ -11,12 +11,13 @@ const navItems = [
   { href: "#sobre-mi", label: "Sobre Mí" },
   { href: "#trayectoria", label: "Trayectoria" },
   { href: "#torneos", label: "Torneos" },
+  { href: "#calendario", label: "Calendario" },
   { href: "#galeria", label: "Galería" },
   { href: "#sponsors", label: "Sponsors" },
   { href: "#proyecto-2026", label: "2026" },
 ];
 
-export default function Navbar() {
+export default function Navbar({ fipRanking = "294" }: { fipRanking?: string }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
@@ -112,7 +113,7 @@ export default function Navbar() {
           {/* Ranking badge */}
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
             <Trophy className="w-4 h-4 text-gold" />
-            <span className="text-sm font-semibold">#294</span>
+            <span className="text-sm font-semibold">#{fipRanking}</span>
             <span className="text-xs text-foreground/50">FIP</span>
           </div>
 
@@ -178,7 +179,7 @@ export default function Navbar() {
                       <p className="font-bold text-lg text-foreground">Juan Balzola</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <Trophy className="w-3.5 h-3.5 text-gold" />
-                        <span className="text-sm text-gold font-medium">#294 FIP</span>
+                        <span className="text-sm text-gold font-medium">#{fipRanking} FIP</span>
                       </div>
                     </div>
                   </div>
